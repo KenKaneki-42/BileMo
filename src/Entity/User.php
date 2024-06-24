@@ -30,7 +30,7 @@ class User
     /**
      * @var Collection<int, Customer>
      */
-    #[ORM\OneToMany(targetEntity: Customer::class, mappedBy: 'userId')]
+    #[ORM\OneToMany(targetEntity: Customer::class, mappedBy: 'user')]
     private Collection $customers;
 
     #[ORM\Column]
@@ -116,7 +116,7 @@ class User
     {
         if (!$this->customers->contains($customer)) {
             $this->customers->add($customer);
-            $customer->setUserId($this);
+            $customer->setuser($this);
         }
 
         return $this;
@@ -126,8 +126,8 @@ class User
     {
         if ($this->customers->removeElement($customer)) {
             // set the owning side to null (unless already changed)
-            if ($customer->getUserId() === $this) {
-                $customer->setUserId(null);
+            if ($customer->getuser() === $this) {
+                $customer->setuser(null);
             }
         }
 

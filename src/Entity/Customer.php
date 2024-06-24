@@ -29,7 +29,7 @@ class Customer
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'customers')]
-    private ?User $userId = null;
+    private ?User $user = null;
 
     public function getId(): ?int
     {
@@ -103,14 +103,14 @@ class Customer
         return $this;
     }
 
-    public function getUserId(): ?User
+    public function getUser(): ?User
     {
-        return $this->userId;
+        return $this->user;
     }
 
-    public function setUserId(?User $userId): static
+    public function setUser(?User $user): static
     {
-        $this->userId = $userId;
+        $this->user = $user;
 
         return $this;
     }
