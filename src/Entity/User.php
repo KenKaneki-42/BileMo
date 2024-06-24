@@ -52,7 +52,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
   /**
    * @var Collection<int, Customer>
    */
-  #[ORM\OneToMany(targetEntity: Customer::class, mappedBy: 'user')]
+  #[ORM\OneToMany(targetEntity: Customer::class, mappedBy: 'user', orphanRemoval: true)]
   private Collection $customers;
 
   #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: false)]
@@ -156,12 +156,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     return $this;
   }
 
-  public function getUpdatedAt(): ?\DateTimeImmutable
+  public function getUpdatedAt(): ?\DateTime
   {
     return $this->updatedAt;
   }
 
-  public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
+  public function setUpdatedAt(\DateTime $updatedAt): static
   {
     $this->updatedAt = $updatedAt;
 

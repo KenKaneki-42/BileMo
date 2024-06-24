@@ -21,7 +21,7 @@ class UserFixtures extends Fixture
     {
         $faker = Factory::create();
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 1; $i < 11; $i++) {
             $user = new User();
             $user->setName($faker->company());
             $user->setEmail($faker->email);
@@ -30,7 +30,12 @@ class UserFixtures extends Fixture
             );
             $user->setApiKey($faker->uuid);
             $user->setRoles(['ROLE_USER']);
+            $createdAt = $faker->dateTimeBetween('-1 year', '-3 months');
+            $createdAtImmutable = \DateTimeImmutable::createFromMutable($createdAt);
+            $user->setCreatedAt($createdAtImmutable);
+            $user->setUpdatedAt($faker->dateTimeBetween('-3 monts', 'now'));
             $manager->persist($user);
+            $this->addReference('user-'.$i, $user);
         }
 
         $manager->flush();
