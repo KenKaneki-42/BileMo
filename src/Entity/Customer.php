@@ -1,32 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Doctrine\DBAL\Types\Types;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 class Customer
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::STRING, length: 255)]
     private ?string $firstName = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::STRING, length: 255)]
     private ?string $lastName = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::STRING, length: 255, unique: true)]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 6, max: 100)]
+    #[Assert\Email]
     private ?string $email = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $updatedAt = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private ?\DateTime $updatedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'customers')]
     private ?User $user = null;

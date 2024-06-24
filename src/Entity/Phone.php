@@ -1,5 +1,8 @@
 <?php
 
+declare(strict_types=1);
+
+
 namespace App\Entity;
 
 use App\Repository\PhoneRepository;
@@ -14,23 +17,23 @@ class Phone
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: false)]
     private ?string $model = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: false)]
     private ?string $brand = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[ORM\Column(type: Types::TEXT, nullable: false)]
     private ?string $description = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::FLOAT, nullable: false)]
     private ?float $price = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: false)]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $updatedAt = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: false)]
+    private ?\DateTime $updatedAt = null;
 
     public function getId(): ?int
     {
