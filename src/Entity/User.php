@@ -12,8 +12,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use App\Validator\Constraints as CustomAssert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+#[CustomAssert\IsCreatedAtBeforeUpdatedAt]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
   #[ORM\Id]
@@ -22,6 +24,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
   private ?int $id = null;
 
   #[ORM\Column(type: Types::STRING, length: 255, nullable: false)]
+  #[Assert\NotBlank]
+  #[Assert\Length(min: 2, max: 50, message: "Votre nom doit contenir entre 2 et 50 caractères.")]
+  #[Assert\Regex(pattern: "/^[a-zA-ZÀ-ÿ '-]+$/u", message: "Votre nom ne doit contenir que des lettres.")]
   private ?string $name = null;
 
   #[ORM\Column(type: Types::STRING, length: 255, unique: true, nullable: false)]
@@ -30,9 +35,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
   #[Assert\Email]
   private ?string $email = null;
 
-  /**
-   * @var string The hashed password
-   */
   #[ORM\Column(type: Types::STRING, length: 255, nullable: false)]
   #[Assert\NotBlank(groups: ['password'])]
   #[Assert\Length(min: 8)]
@@ -40,13 +42,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
   private ?string $password = null;
 
   #[ORM\Column(length: 510)]
+  #[Assert\NotBlank]
+  #[Assert\Length(min: 36, max: 510)]
+  #[Assert\Regex(pattern: "/^[a-f0-9-]+$/", message: "API key doit être un UUID valide.")]
   private ?string $apiKey = null;
+
+  #[Assert\NotBlank(groups: ['password'])]
+  #[Assert\Length(min: 8)]
+  #[Assert\Regex(pattern: "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/", message: "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.", groups: ['password'])]
   private ?string $plainPassword = null;
 
-  /**
-   * @var string[]
-   */
   #[ORM\Column(type: Types::JSON)]
+  #[Assert\NotBlank]
+  #[Assert\Count(min: 1)]
+  #[Assert\All([new Assert\Choice(choices: ['ROLE_USER', 'ROLE_ADMIN', 'ROLE_SUPER_ADMIN'], message: 'Le rôle sélectionné n\'est pas valide.')])]
   private array $roles = [];
 
   /**
@@ -56,9 +65,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
   private Collection $customers;
 
   #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: false)]
+  #[Assert\NotBlank]
+  #[Assert\LessThanOrEqual(value: "today", message: "La date de création ne peut pas être dans le futur.")]
   private ?\DateTimeImmutable $createdAt = null;
 
   #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: false)]
+  #[Assert\NotBlank]
+  #[Assert\LessThanOrEqual(value: "today", message: "La date de mise à jour ne peut pas être dans le futur.")]
   private ?\DateTime $updatedAt = null;
 
   public function __construct()
