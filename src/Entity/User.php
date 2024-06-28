@@ -250,4 +250,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     return $this;
   }
+
+  // Need it for lexik/jwt-authentication-bundle
+  public function getUsername(): string
+  {
+    return $this->getUserIdentifier();
+  }
 }
