@@ -25,7 +25,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
   #[ORM\Column(type: Types::STRING, length: 255, nullable: false)]
   #[Assert\NotBlank]
-  #[Assert\Length(min: 2, max: 50, message: "Votre nom doit contenir entre 2 et 50 caractères.")]
+  #[Assert\Length(min: 2, max: 50, minMessage: "Votre nom doit contenir au moins {{limit}} caractères.", maxMessage: "Votre nom ne peut pas contenir plus de {{limit}} caractères.")]
   #[Assert\Regex(pattern: "/^[a-zA-ZÀ-ÿ '-]+$/u", message: "Votre nom ne doit contenir que des lettres.")]
   private ?string $name = null;
 
@@ -37,7 +37,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
   #[ORM\Column(type: Types::STRING, length: 255, nullable: false)]
   #[Assert\NotBlank(groups: ['password'])]
-  #[Assert\Length(min: 8)]
+  #[Assert\Length(min: 8, groups: ['password'], minMessage: "Le mot de passe doit contenir au moins {{limit}} caractères.")]
   #[Assert\Regex(pattern: "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/", message: "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.", groups: ['password'])]
   private ?string $password = null;
 
@@ -249,5 +249,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     $this->plainPassword = $plainPassword;
 
     return $this;
+  }
+
+  // Need it for lexik/jwt-authentication-bundle
+  public function getUsername(): string
+  {
+    return $this->getUserIdentifier();
   }
 }
