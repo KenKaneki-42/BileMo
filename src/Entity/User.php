@@ -12,10 +12,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use App\Validator\Constraints as CustomAssert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[CustomAssert\IsCreatedAtBeforeUpdatedAt]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
   #[ORM\Id]
