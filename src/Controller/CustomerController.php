@@ -11,6 +11,7 @@ use App\Entity\User ;
 use App\Entity\Customer ;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class CustomerController extends AbstractController
 {
@@ -32,10 +33,18 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/api/users/{id}/customers', name: 'createCustomer', methods: ['POST'])]
-    public function createCustomer(User $user, Request $request, SerializerInterface $serializer,EntityManagerInterface $em): JsonResponse
+    public function createCustomer(User $user, Request $request, SerializerInterface $serializer,EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
         $customer->setUser($user);
+
+        $errors = $validator->validate($customer);
+        if (count($errors) > 0) {
+            // 400 = JsonResponse::HTTP_BAD_REQUEST
+            return new JsonResponse($serializer->serialize($errors,'json'), 400, [], true);
+            // throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, "La requête est invalide");
+        }
+
         $em->persist($customer);
         $em->flush();
 
