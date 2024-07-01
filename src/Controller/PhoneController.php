@@ -6,7 +6,6 @@ use App\Repository\PhoneRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
-// use Symfony\Component\Serializer\SerializerInterface;
 use JMS\Serializer\SerializerInterface;
 use App\Entity\Phone ;
 use Symfony\Component\HttpFoundation\Request;
