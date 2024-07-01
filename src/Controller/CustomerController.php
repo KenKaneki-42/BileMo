@@ -6,28 +6,31 @@ use App\Repository\CustomerRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
+use JMS\Serializer\SerializerInterface;
 use App\Entity\User ;
 use App\Entity\Customer ;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class CustomerController extends AbstractController
 {
     #[Route('/api/users/{id}/customers', name: 'customersListForUser', methods: ['GET'])]
     public function getCustomersForUser(User $user, CustomerRepository $customerRepository, SerializerInterface $serializer): JsonResponse
     {
+        $context = SerializationContext::create()->setGroups(['getCustomerDetails']);
         $customerList = $customerRepository->findBy(['user' => $user]);
-        $jsonCustomerList = $serializer->serialize($customerList, 'json', ['groups' => 'getCustomerDetails']);
+        $jsonCustomerList = $serializer->serialize($customerList, 'json', $context);
         return new JsonResponse($jsonCustomerList, 200, [], true);
     }
 
     #[Route('/api/customers/{id}', name: 'customerDetails', methods: ['GET'])]
     public function getCustomerDetails(Customer $customer, SerializerInterface $serializer): JsonResponse
     {
-
-        $jsonPhone = $serializer->serialize($customer, 'json', ['groups' => 'getCustomerDetails']);
+        $context = SerializationContext::create()->setGroups(['getCustomerDetails']);
+        $jsonPhone = $serializer->serialize($customer, 'json', $context);
         // 200 = JsonResponse::HTTP_OK
         return new JsonResponse($jsonPhone, 200, [], true);
     }
@@ -47,8 +50,8 @@ class CustomerController extends AbstractController
 
         $em->persist($customer);
         $em->flush();
-
-        $jsonCustomer = $serializer->serialize($customer, 'json', ['groups' => 'getCustomerDetails']);
+        $context = SerializationContext::create()->setGroups(['getCustomerDetails']);
+        $jsonCustomer = $serializer->serialize($customer, 'json', $context);
 
         $location = $this->generateUrl('customerDetails', ['id' => $customer->getId()]);
 
@@ -57,8 +60,9 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/api/customers/{id}', name: 'delete_customer', methods: ['DELETE'])]
-    public function deleteCustomer(Customer $customer, EntityManagerInterface $em): JsonResponse
+    public function deleteCustomer(Customer $customer, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
     {
+        $cachePool->invalidateTags(['customersCache']);
         $em->remove($customer);
         $em->flush();
         // 204 = JsonResponse::HTTP_NO_CONTENT

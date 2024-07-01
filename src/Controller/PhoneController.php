@@ -6,7 +6,8 @@ use App\Repository\PhoneRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\SerializerInterface;
+// use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\SerializerInterface;
 use App\Entity\Phone ;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -21,12 +22,14 @@ class PhoneController extends AbstractController
         $limit = $request->query->get('limit') ?? 10;
 
         $idCache = 'getAllPhones' . $page . '_' . $limit;
-        $phoneList = $cachePool->get($idCache, function(ItemInterface $item) use ($phoneRepository, $page, $limit) {
+
+        $jsonPhoneList = $cachePool->get($idCache, function(ItemInterface $item) use ($phoneRepository, $page, $limit, $serializer) {
           $item->tag('phonesCache');
-          return $phoneRepository->findAllwithPagination($page, $limit);
+          $item->expiresAfter(120);
+          $phoneList = $phoneRepository->findAllwithPagination($page, $limit);
+          return $serializer->serialize($phoneList, 'json');
         });
-        // $phoneList = $phoneRepository->findAllwithPagination($page, $limit);
-        $jsonPhoneList = $serializer->serialize($phoneList, 'json');
+
         return new JsonResponse($jsonPhoneList, 200, [], true);
     }
 
