@@ -25,3 +25,7 @@ services:
     App\Command\:
         resource: '../src/Command'
         tags: ['console.command']
+
+    annotation_reader:
+        class: Doctrine\Common\Annotations\AnnotationReader
+        public: false
