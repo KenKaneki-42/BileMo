@@ -14,30 +14,38 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use App\Service\VersioningService;
 
 class CustomerController extends AbstractController
 {
     #[Route('/api/users/{id}/customers', name: 'customersListForUser', methods: ['GET'])]
-    public function getCustomersForUser(User $user, CustomerRepository $customerRepository, SerializerInterface $serializer): JsonResponse
-    {
-        $context = SerializationContext::create()->setGroups(['getCustomerDetails']);
+    public function getCustomersForUser(User $user, CustomerRepository $customerRepository, SerializerInterface $serializer, VersioningService $versioningService): JsonResponse
+    {   $version = $versioningService->getVersion();
+        $context = SerializationContext::create()
+          ->setGroups(['getCustomerDetails'])
+          ->setVersion($version);
         $customerList = $customerRepository->findBy(['user' => $user]);
         $jsonCustomerList = $serializer->serialize($customerList, 'json', $context);
         return new JsonResponse($jsonCustomerList, 200, [], true);
     }
 
     #[Route('/api/customers/{id}', name: 'customerDetails', methods: ['GET'])]
-    public function getCustomerDetails(Customer $customer, SerializerInterface $serializer): JsonResponse
+    public function getCustomerDetails(Customer $customer, SerializerInterface $serializer, VersioningService $versioningService): JsonResponse
     {
-        $context = SerializationContext::create()->setGroups(['getCustomerDetails']);
+        $version = $versioningService->getVersion();
+        $context = SerializationContext::create()
+        ->setGroups(['getCustomerDetails'])
+        ->setVersion($version);
         $jsonPhone = $serializer->serialize($customer, 'json', $context);
         // 200 = JsonResponse::HTTP_OK
         return new JsonResponse($jsonPhone, 200, [], true);
     }
 
     #[Route('/api/users/{id}/customers', name: 'createCustomer', methods: ['POST'])]
-    public function createCustomer(User $user, Request $request, SerializerInterface $serializer,EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
+    public function createCustomer(User $user, Request $request, SerializerInterface $serializer,EntityManagerInterface $em, ValidatorInterface $validator, VersioningService $versioningService): JsonResponse
     {
+        $version = $versioningService->getVersion();
+
         $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
         $customer->setUser($user);
 
@@ -50,7 +58,9 @@ class CustomerController extends AbstractController
 
         $em->persist($customer);
         $em->flush();
-        $context = SerializationContext::create()->setGroups(['getCustomerDetails']);
+        $context = SerializationContext::create()
+          ->setGroups(['getCustomerDetails'])
+          ->setVersion($version);
         $jsonCustomer = $serializer->serialize($customer, 'json', $context);
 
         $location = $this->generateUrl('customerDetails', ['id' => $customer->getId()]);
