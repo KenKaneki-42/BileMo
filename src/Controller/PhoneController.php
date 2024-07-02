@@ -14,7 +14,7 @@ use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class PhoneController extends AbstractController
 {
-    #[Route('/api/phones', name: 'phones', methods: ['GET'])]
+    #[Route('/api/phones', name: 'phonesList', methods: ['GET'])]
     public function getAllPhones(PhoneRepository $phoneRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cachePool): JsonResponse
     {
         $page = $request->query->get('page') ?? 1;
@@ -32,7 +32,7 @@ class PhoneController extends AbstractController
         return new JsonResponse($jsonPhoneList, 200, [], true);
     }
 
-    #[Route('/api/phones/{id}', name: 'phone', methods: ['GET'])]
+    #[Route('/api/phones/{id}', name: 'phoneDetails', methods: ['GET'])]
     public function getPhoneDetails(Phone $phone, SerializerInterface $serializer): JsonResponse
     {
         $jsonPhone = $serializer->serialize($phone, 'json');

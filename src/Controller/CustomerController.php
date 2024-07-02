@@ -59,7 +59,7 @@ class CustomerController extends AbstractController
         return new JsonResponse($jsonCustomer, 201, ["Location" => $location], true);
     }
 
-    #[Route('/api/customers/{id}', name: 'delete_customer', methods: ['DELETE'])]
+    #[Route('/api/customers/{id}', name: 'deleteCustomer', methods: ['DELETE'])]
     public function deleteCustomer(Customer $customer, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
     {
         $cachePool->invalidateTags(['customersCache']);
