@@ -9,10 +9,41 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation\Groups;
 use Doctrine\DBAL\Types\Types;
-use App\Validator\Constraints as CustomAssert;
+use Hateoas\Configuration\Annotation as Hateoas;
+
+// TODO check exlcusion for self and delete and is the user i an owner
+// TODO check the create relation ( id = "expr(object.getUser().getId())" should i display it?
+/**
+ * @Hateoas\Relation(
+ *    "self",
+ *    href = @Hateoas\Route(
+ *        "customerDetails",
+ *        parameters = { "id" = "expr(object.getId())" }
+ *    ),
+ *    exclusion = @Hateoas\Exclusion(groups={"getCustomerDetails"})
+ * )
+ *
+ * @Hateoas\Relation(
+ *   "delete",
+ *    href = @Hateoas\Route(
+ *      "deleteCustomer",
+ *      parameters = { "id" = "expr(object.getId())" }
+ *    ),
+ *    exclusion = @Hateoas\Exclusion(groups={"getCustomerDetails"})
+ * )
+ *
+ * @Hateoas\Relation(
+ *  "create",
+ *   href = @Hateoas\Route(
+ *     "createCustomer",
+ *     parameters = { "id" = "expr(object.getUser().getId())" }
+ *   ),
+ *   exclusion = @Hateoas\Exclusion(groups={"getCustomerDetails"})
+ * )
+ *
+ */
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
-#[CustomAssert\IsCreatedAtBeforeUpdatedAt]
 class Customer
 {
     #[ORM\Id]
