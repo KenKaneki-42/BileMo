@@ -15,10 +15,36 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use App\Service\VersioningService;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Attributes as OA;
 
 class CustomerController extends AbstractController
 {
     #[Route('/api/users/{id}/customers', name: 'customersListForUser', methods: ['GET'])]
+    #[OA\Response(
+        response: 200,
+        description: 'Retourne la liste des customers',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getCustomerDetails']))
+        )
+    )]
+    #[OA\Parameter(
+        name: 'page',
+        in: 'query',
+        description: "La page que l'on veut récupérer",
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        in: 'query',
+        description: "Le nombre d'éléments que l'on veut récupérer",
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Tag(name: 'customers')]
+    // TODO si j'utilise le Security, je n'ai pas accès à ma route custom, l'autorisation ne passe pas
+    // #[Security(name: 'Bearer')]
     public function getCustomersForUser(User $user, CustomerRepository $customerRepository, SerializerInterface $serializer, VersioningService $versioningService): JsonResponse
     {   $version = $versioningService->getVersion();
         $context = SerializationContext::create()
