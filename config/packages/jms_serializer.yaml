@@ -2,8 +2,10 @@ jms_serializer:
     visitors:
         xml_serialization:
             format_output: '%kernel.debug%'
-#    metadata:
-#        auto_detection: false
+    metadata:
+        auto_detection: true
+    property_naming:
+        id: jms_serializer.identical_property_naming_strategy
 #        directories:
 #            any-name:
 #                namespace_prefix: "My\\FooBundle"

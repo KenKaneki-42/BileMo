@@ -11,9 +11,8 @@ use JMS\Serializer\Annotation\Groups;
 use Doctrine\DBAL\Types\Types;
 use Hateoas\Configuration\Annotation as Hateoas;
 use JMS\Serializer\Annotation\Since;
+use JMS\Serializer\Annotation\SerializedName as JMS;
 
-// TODO check exlcusion for self and delete and is the user i an owner
-// TODO check the create relation ( id = "expr(object.getUser().getId())" should i display it?
 /**
  * @Hateoas\Relation(
  *    "self",
@@ -36,8 +35,7 @@ use JMS\Serializer\Annotation\Since;
  * @Hateoas\Relation(
  *  "create",
  *   href = @Hateoas\Route(
- *     "createCustomer",
- *     parameters = { "id" = "expr(object.getUser().getId())" }
+ *     "createCustomer"
  *   ),
  *   exclusion = @Hateoas\Exclusion(groups={"getCustomerDetails"})
  * )
@@ -59,6 +57,7 @@ class Customer
     #[Assert\Regex(pattern:"/^[a-zA-ZÀ-ÿ '-]+$/u", message:"Votre nom ne peut contenir que des lettres.")]
     #[Groups(['getCustomerDetails'])]
     #[Since ("1.0")]
+    #[JMS("firstName")]
     private ?string $firstName = null;
 
     #[ORM\Column(type: Types::STRING, length: 255)]
@@ -66,6 +65,7 @@ class Customer
     #[Assert\Length(min: 2, max: 50)]
     #[Assert\Regex(pattern:"/^[a-zA-ZÀ-ÿ '-]+$/u", message:"Votre nom ne peut contenir que des lettres.")]
     #[Groups(['getCustomerDetails'])]
+    #[JMS("lastName")]
     private ?string $lastName = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, unique: true)]
@@ -77,13 +77,13 @@ class Customer
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Assert\NotBlank]
-    #[Assert\LessThanOrEqual(value: "today", message: "La date de création ne peut pas être dans le futur.")]
+    #[Assert\LessThanOrEqual(value: "now", message: "La date de création ne peut pas être dans le futur.")]
     #[Groups(['getCustomerDetails'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Assert\NotBlank]
-    #[Assert\LessThanOrEqual(value: "today", message: "La date de mise à jour ne peut pas être dans le futur.")]
+    #[Assert\LessThanOrEqual(value: "now", message: "La date de mise à jour ne peut pas être dans le futur.")]
     #[Groups(['getCustomerDetails'])]
     private ?\DateTime $updatedAt = null;
 

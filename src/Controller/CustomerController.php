@@ -8,7 +8,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
-use App\Entity\User ;
 use App\Entity\Customer ;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,37 +15,27 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use App\Service\VersioningService;
 use Nelmio\ApiDocBundle\Annotation\Model;
-use Nelmio\ApiDocBundle\Annotation\Security;
+use Nelmio\ApiDocBundle\Annotation\Security as ApiSecurity;
 use OpenApi\Attributes as OA;
+use Symfony\Bundle\SecurityBundle\Security;
+
 
 class CustomerController extends AbstractController
 {
-    #[Route('/api/users/{id}/customers', name: 'customersListForUser', methods: ['GET'])]
-    #[OA\Response(
-        response: 200,
-        description: 'Retourne la liste des customers',
-        content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getCustomerDetails']))
-        )
-    )]
-    #[OA\Parameter(
-        name: 'page',
-        in: 'query',
-        description: "La page que l'on veut récupérer",
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
-        name: 'limit',
-        in: 'query',
-        description: "Le nombre d'éléments que l'on veut récupérer",
-        schema: new OA\Schema(type: 'string')
-    )]
+    #[Route('/api/customers', name: 'customersListForUser', methods: ['GET'])]
+    #[OA\Response(response: 200, description: 'Retourne la liste des customers', content: new OA\JsonContent(type: 'array',items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getCustomerDetails']))))]
+    #[OA\Parameter(name: 'page', in: 'query', description: "La page que l'on veut récupérer", schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'limit', in: 'query', description: "Le nombre d'éléments que l'on veut récupérer", schema: new OA\Schema(type: 'string'))]
     #[OA\Tag(name: 'customers')]
-    // TODO si j'utilise le Security, je n'ai pas accès à ma route custom, l'autorisation ne passe pas
-    // #[Security(name: 'Bearer')]
-    public function getCustomersForUser(User $user, CustomerRepository $customerRepository, SerializerInterface $serializer, VersioningService $versioningService): JsonResponse
-    {   $version = $versioningService->getVersion();
+    #[ApiSecurity(name: 'Bearer')]
+    public function getCustomersForUser(Security $security, CustomerRepository $customerRepository, SerializerInterface $serializer, VersioningService $versioningService): JsonResponse
+    {
+        $user = $security->getUser();
+        if (!$user){
+          // 401 = JsonResponse::HTTP_UNAUTHORIZED
+          return new JsonResponse('Unauthorized', 401, [], true);
+        }
+        $version = $versioningService->getVersion();
         $context = SerializationContext::create()
           ->setGroups(['getCustomerDetails'])
           ->setVersion($version);
@@ -56,8 +45,13 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/api/customers/{id}', name: 'customerDetails', methods: ['GET'])]
-    public function getCustomerDetails(Customer $customer, SerializerInterface $serializer, VersioningService $versioningService): JsonResponse
+    public function getCustomerDetails(Customer $customer, SerializerInterface $serializer, VersioningService $versioningService, Security $security): JsonResponse
     {
+        $user = $security->getUser();
+        if ($customer->getUser() !== $user){
+            // 403 = JsonResponse::HTTP_FORBIDDEN
+            return new JsonResponse('Forbidden', 403, [], true);
+        }
         $version = $versioningService->getVersion();
         $context = SerializationContext::create()
         ->setGroups(['getCustomerDetails'])
@@ -67,13 +61,23 @@ class CustomerController extends AbstractController
         return new JsonResponse($jsonPhone, 200, [], true);
     }
 
-    #[Route('/api/users/{id}/customers', name: 'createCustomer', methods: ['POST'])]
-    public function createCustomer(User $user, Request $request, SerializerInterface $serializer,EntityManagerInterface $em, ValidatorInterface $validator, VersioningService $versioningService): JsonResponse
+    #[Route('/api/customers/new', name: 'createCustomer', methods: ['POST'])]
+    public function createCustomer(Security $security, Request $request, SerializerInterface $serializer,EntityManagerInterface $em, ValidatorInterface $validator, VersioningService $versioningService, TagAwareCacheInterface $cachePool): JsonResponse
     {
+        if (!$security->isGranted('ROLE_USER')) {
+            // 403 = JsonResponse::HTTP_FORBIDDEN
+            return new JsonResponse(['error' => 'Accès refusé'], 403);
+        }
+
         $version = $versioningService->getVersion();
 
         $customer = $serializer->deserialize($request->getContent(), Customer::class, 'json');
-        $customer->setUser($user);
+
+        $customer
+          ->setCreatedAt(new \DateTimeImmutable('now'))
+          ->setUpdatedAt(new \DateTime('now'));
+
+        $customer->setUser($security->getUser());
 
         $errors = $validator->validate($customer);
         if (count($errors) > 0) {
@@ -84,6 +88,9 @@ class CustomerController extends AbstractController
 
         $em->persist($customer);
         $em->flush();
+
+        $cachePool->invalidateTags(['customersCache']);
+        
         $context = SerializationContext::create()
           ->setGroups(['getCustomerDetails'])
           ->setVersion($version);
