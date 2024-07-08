@@ -7,12 +7,42 @@ namespace App\Entity;
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Groups;
 use Doctrine\DBAL\Types\Types;
-use App\Validator\Constraints as CustomAssert;
+use Hateoas\Configuration\Annotation as Hateoas;
+use JMS\Serializer\Annotation\Since;
+use JMS\Serializer\Annotation\SerializedName as JMS;
+
+/**
+ * @Hateoas\Relation(
+ *    "self",
+ *    href = @Hateoas\Route(
+ *        "customerDetails",
+ *        parameters = { "id" = "expr(object.getId())" }
+ *    ),
+ *    exclusion = @Hateoas\Exclusion(groups={"getCustomerDetails"})
+ * )
+ *
+ * @Hateoas\Relation(
+ *   "delete",
+ *    href = @Hateoas\Route(
+ *      "deleteCustomer",
+ *      parameters = { "id" = "expr(object.getId())" }
+ *    ),
+ *    exclusion = @Hateoas\Exclusion(groups={"getCustomerDetails"})
+ * )
+ *
+ * @Hateoas\Relation(
+ *  "create",
+ *   href = @Hateoas\Route(
+ *     "createCustomer"
+ *   ),
+ *   exclusion = @Hateoas\Exclusion(groups={"getCustomerDetails"})
+ * )
+ *
+ */
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
-#[CustomAssert\IsCreatedAtBeforeUpdatedAt]
 class Customer
 {
     #[ORM\Id]
@@ -26,6 +56,8 @@ class Customer
     #[Assert\Length(min: 2, max: 50)]
     #[Assert\Regex(pattern:"/^[a-zA-ZÀ-ÿ '-]+$/u", message:"Votre nom ne peut contenir que des lettres.")]
     #[Groups(['getCustomerDetails'])]
+    #[Since ("1.0")]
+    #[JMS("firstName")]
     private ?string $firstName = null;
 
     #[ORM\Column(type: Types::STRING, length: 255)]
@@ -33,6 +65,7 @@ class Customer
     #[Assert\Length(min: 2, max: 50)]
     #[Assert\Regex(pattern:"/^[a-zA-ZÀ-ÿ '-]+$/u", message:"Votre nom ne peut contenir que des lettres.")]
     #[Groups(['getCustomerDetails'])]
+    #[JMS("lastName")]
     private ?string $lastName = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, unique: true)]
@@ -44,13 +77,13 @@ class Customer
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Assert\NotBlank]
-    #[Assert\LessThanOrEqual(value: "today", message: "La date de création ne peut pas être dans le futur.")]
+    #[Assert\LessThanOrEqual(value: "now", message: "La date de création ne peut pas être dans le futur.")]
     #[Groups(['getCustomerDetails'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Assert\NotBlank]
-    #[Assert\LessThanOrEqual(value: "today", message: "La date de mise à jour ne peut pas être dans le futur.")]
+    #[Assert\LessThanOrEqual(value: "now", message: "La date de mise à jour ne peut pas être dans le futur.")]
     #[Groups(['getCustomerDetails'])]
     private ?\DateTime $updatedAt = null;
 

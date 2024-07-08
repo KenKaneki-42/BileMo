@@ -9,10 +9,20 @@ use App\Repository\PhoneRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
-use App\Validator\Constraints as CustomAssert;
+use Hateoas\Configuration\Annotation as Hateoas;
+
+/**
+ * @Hateoas\Relation(
+ *    "self",
+ *    href = @Hateoas\Route(
+ *        "phoneDetails",
+ *        parameters = { "id" = "expr(object.getId())" }
+ *    ),
+ * )
+ */
 
 #[ORM\Entity(repositoryClass: PhoneRepository::class)]
-#[CustomAssert\IsCreatedAtBeforeUpdatedAt]
+
 class Phone
 {
     #[ORM\Id]

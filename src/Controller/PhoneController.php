@@ -6,22 +6,41 @@ use App\Repository\PhoneRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
 use App\Entity\Phone ;
+use App\Service\VersioningService;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class PhoneController extends AbstractController
 {
-    #[Route('/api/phones', name: 'phones', methods: ['GET'])]
-    public function getAllPhones(PhoneRepository $phoneRepository, SerializerInterface $serializer): JsonResponse
+    #[Route('/api/phones', name: 'phonesList', methods: ['GET'])]
+    public function getAllPhones(PhoneRepository $phoneRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cachePool, VersioningService $versioningService): JsonResponse
     {
-        $phoneList = $phoneRepository->findAll();
-        $jsonPhoneList = $serializer->serialize($phoneList, 'json');
+        $page = $request->query->get('page') ?? 1;
+        $limit = $request->query->get('limit') ?? 10;
+
+        $idCache = 'getAllPhones' . $page . '_' . $limit;
+
+        $jsonPhoneList = $cachePool->get($idCache, function(ItemInterface $item) use ($phoneRepository, $page, $limit, $serializer, $versioningService) {
+          $version = $versioningService->getVersion();
+          $item->tag('phonesCache');
+          $item->expiresAfter(120);
+          $phoneList = $phoneRepository->findAllwithPagination($page, $limit);
+          $context = SerializationContext::create()->setVersion($version);
+          return $serializer->serialize($phoneList, 'json', $context);
+        });
+
         return new JsonResponse($jsonPhoneList, 200, [], true);
     }
 
-    #[Route('/api/phones/{id}', name: 'phone', methods: ['GET'])]
-    public function getPhoneDetails(Phone $phone, SerializerInterface $serializer): JsonResponse
+    #[Route('/api/phones/{id}', name: 'phoneDetails', methods: ['GET'])]
+    public function getPhoneDetails(Phone $phone, SerializerInterface $serializer, VersioningService $versioningService): JsonResponse
     {
+        $version = $versioningService->getVersion();
+        $context = SerializationContext::create()->setVersion($version);
         $jsonPhone = $serializer->serialize($phone, 'json');
         return new JsonResponse($jsonPhone, 200, [], true);
     }
