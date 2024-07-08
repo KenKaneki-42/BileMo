@@ -83,14 +83,13 @@ class CustomerController extends AbstractController
         if (count($errors) > 0) {
             // 400 = JsonResponse::HTTP_BAD_REQUEST
             return new JsonResponse($serializer->serialize($errors,'json'), 400, [], true);
-            // throw new HttpException(JsonResponse::HTTP_BAD_REQUEST, "La requête est invalide");
         }
 
         $em->persist($customer);
         $em->flush();
 
         $cachePool->invalidateTags(['customersCache']);
-        
+
         $context = SerializationContext::create()
           ->setGroups(['getCustomerDetails'])
           ->setVersion($version);
