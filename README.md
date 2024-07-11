@@ -39,7 +39,7 @@ you can consult the documentation at the following address: `{{base_url}}/api/do
 ## Technologies Used
 
 - PHP 8.3.6
-- Symfony 7.0
+- Symfony 7.1
 - MySQL (Relational Database)
 
 ## Libraries
