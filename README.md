@@ -66,6 +66,9 @@ cd BileMo
 # Install dependencies with Composer
 composer install
 
+# Create database
+php bin/console doctrine:database:create
+
 # Run database migrations
 php bin/console doctrine:migrations:migrate
 

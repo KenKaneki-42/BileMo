@@ -26,7 +26,7 @@ class CustomerController extends AbstractController
     #[OA\Response(response: 200, description: 'Retourne la liste des customers', content: new OA\JsonContent(type: 'array',items: new OA\Items(ref: new Model(type: Customer::class, groups: ['getCustomerDetails']))))]
     #[OA\Parameter(name: 'page', in: 'query', description: "La page que l'on veut récupérer", schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'limit', in: 'query', description: "Le nombre d'éléments que l'on veut récupérer", schema: new OA\Schema(type: 'string'))]
-    #[OA\Tag(name: 'customers')]
+    #[OA\Tag(name: 'Customers')]
     #[ApiSecurity(name: 'Bearer')]
     public function getCustomersForUser(Security $security, CustomerRepository $customerRepository, SerializerInterface $serializer, VersioningService $versioningService): JsonResponse
     {
@@ -45,6 +45,8 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/api/customers/{id}', name: 'customerDetails', methods: ['GET'])]
+    #[OA\Tag(name: 'Customers')]
+    #[ApiSecurity(name: 'Bearer')]
     public function getCustomerDetails(Customer $customer, SerializerInterface $serializer, VersioningService $versioningService, Security $security): JsonResponse
     {
         $user = $security->getUser();
@@ -62,6 +64,8 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/api/customers/new', name: 'createCustomer', methods: ['POST'])]
+    #[OA\Tag(name: 'Customers')]
+    #[ApiSecurity(name: 'Bearer')]
     public function createCustomer(Security $security, Request $request, SerializerInterface $serializer,EntityManagerInterface $em, ValidatorInterface $validator, VersioningService $versioningService, TagAwareCacheInterface $cachePool): JsonResponse
     {
         if (!$security->isGranted('ROLE_USER')) {
@@ -102,6 +106,8 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/api/customers/{id}', name: 'deleteCustomer', methods: ['DELETE'])]
+    #[OA\Tag(name: 'Customers')]
+    #[ApiSecurity(name: 'Bearer')]
     public function deleteCustomer(Customer $customer, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
     {
         $cachePool->invalidateTags(['customersCache']);
