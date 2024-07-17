@@ -111,13 +111,18 @@ class CustomerController extends AbstractController
     #[OA\Tag(name: 'Customers')]
     #[ApiSecurity(name: 'Bearer')]
     #[OA\Response(response: 204,description: "Le customer a été supprimé avec succès.")]
-    public function deleteCustomer(Customer $customer, EntityManagerInterface $em, TagAwareCacheInterface $cachePool): JsonResponse
+    public function deleteCustomer(Customer $customer, EntityManagerInterface $em, TagAwareCacheInterface $cachePool, Security $security): JsonResponse
     {
+          if (!$security->isGranted('ROLE_USER')) {
+            // 403 = JsonResponse::HTTP_FORBIDDEN
+            return new JsonResponse(['error' => 'Accès refusé'], 403);
+        }
+
         $cachePool->invalidateTags(['customersCache']);
         $em->remove($customer);
         $em->flush();
         // 204 = JsonResponse::HTTP_NO_CONTENT
-        return new JsonResponse('Customer deleted!', 204, [], true);
+        return new JsonResponse('Customer supprimé!', 204, [], true);
     }
 
 
