@@ -5,6 +5,7 @@ framework:
 
     # Note that the session will be started ONLY if you read or write from it.
     session: true
+    name: 'APP_SESSION_ID_BILEMO'
 
     #esi: true
     #fragments: true
