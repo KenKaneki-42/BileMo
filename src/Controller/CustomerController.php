@@ -53,26 +53,27 @@ class CustomerController extends AbstractController
         $user = $security->getUser();
         if ($customer->getUser() !== $user){
             // 403 = JsonResponse::HTTP_FORBIDDEN
-            return new JsonResponse('Forbidden', 403, [], true);
+            return new JsonResponse($serializer->serialize(['error' => 'Accès refusé'],'json'), 403, [], true);
         }
         $version = $versioningService->getVersion();
         $context = SerializationContext::create()
         ->setGroups(['getCustomerDetails'])
         ->setVersion($version);
-        $jsonPhone = $serializer->serialize($customer, 'json', $context);
+        $jsonCustomer = $serializer->serialize($customer, 'json', $context);
+
         // 200 = JsonResponse::HTTP_OK
-        return new JsonResponse($jsonPhone, 200, [], true);
+        return new JsonResponse($jsonCustomer, 200, [], true);
     }
 
-    #[Route('/api/customers/new', name: 'create_customer', methods: ['POST'])]
+    #[Route('/api/customers', name: 'create_customer', methods: ['POST'])]
     #[OA\Tag(name: 'Customers')]
     #[ApiSecurity(name: 'Bearer')]
-    #[OA\RequestBody(request: "CreateCustomer",description: "Créer un nouveau customer",required: true,content: new OA\JsonContent(type: "object",required: ["name", "email"],properties: [new OA\Property(property: "firstName", type: "string", example: "Doe"),new OA\Property(property: "lastName", type: "string", example: "John"),new OA\Property(property: "email", type: "string", format: "email", example: "john.doe@example.com")]))]
+    #[OA\RequestBody(request: "createCustomer", description: "Créer un nouveau customer", required: true, content: new OA\JsonContent(type: "object", required: ["firstName", "lastName", "email"], properties: [new OA\Property(property: "firstName", type: "string", example: "Doe"), new OA\Property(property: "lastName", type: "string", example: "John"), new OA\Property(property: "email", type: "string", format: "email", example: "john.doe@example.com")]))]
     public function createCustomer(Security $security, Request $request, SerializerInterface $serializer,EntityManagerInterface $em, ValidatorInterface $validator, VersioningService $versioningService, TagAwareCacheInterface $cachePool): JsonResponse
     {
         if (!$security->isGranted('ROLE_USER')) {
             // 403 = JsonResponse::HTTP_FORBIDDEN
-            return new JsonResponse(['error' => 'Accès refusé'], 403);
+            return new JsonResponse($serializer->serialize(['error' => 'Accès refusé'],'json'), 403, [], true);
         }
 
         $version = $versioningService->getVersion();
@@ -101,7 +102,7 @@ class CustomerController extends AbstractController
           ->setVersion($version);
         $jsonCustomer = $serializer->serialize($customer, 'json', $context);
 
-        $location = $this->generateUrl('customerDetails', ['id' => $customer->getId()]);
+        $location = $this->generateUrl('customer_details', ['id' => $customer->getId()]);
 
         // 201 = JsonResponse::HTTP_CREATED
         return new JsonResponse($jsonCustomer, 201, ["Location" => $location], true);
@@ -111,18 +112,25 @@ class CustomerController extends AbstractController
     #[OA\Tag(name: 'Customers')]
     #[ApiSecurity(name: 'Bearer')]
     #[OA\Response(response: 204,description: "Le customer a été supprimé avec succès.")]
-    public function deleteCustomer(Customer $customer, EntityManagerInterface $em, TagAwareCacheInterface $cachePool, Security $security): JsonResponse
+    public function deleteCustomer(Customer $customer, EntityManagerInterface $em, TagAwareCacheInterface $cachePool, Security $security, SerializerInterface $serializer): JsonResponse
     {
-          if (!$security->isGranted('ROLE_USER')) {
-            // 403 = JsonResponse::HTTP_FORBIDDEN
-            return new JsonResponse(['error' => 'Accès refusé'], 403);
+        $user = $security->getUser();
+
+        if (!$user || $customer->getUser() !== $user) {
+            // customer doesn't belong to this user: 403 = JsonResponse::HTTP_FORBIDDEN
+            return new JsonResponse($serializer->serialize(['error' => 'Accès refusé'],'json'), 403, [], true);
+        }
+
+        if (!$security->isGranted('ROLE_USER')) {
+            // defined role not allowed: 403 = JsonResponse::HTTP_FORBIDDEN
+            return new JsonResponse($serializer->serialize(['error' => "Votre rôle ne permet pas d'accéder à la suppression de l'utilisateur"],'json'), 403, [], true);
         }
 
         $cachePool->invalidateTags(['customersCache']);
         $em->remove($customer);
         $em->flush();
         // 204 = JsonResponse::HTTP_NO_CONTENT
-        return new JsonResponse('Customer supprimé!', 204, [], true);
+        return new JsonResponse('Le customer a été supprimé avec succès.', 204, [], true);
     }
 
 

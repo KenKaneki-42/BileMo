@@ -14,18 +14,23 @@ class ExceptionSubscriber implements EventSubscriberInterface
     {
         $exception = $event->getThrowable();
         if ($exception instanceof HttpException) {
+          $statusCode = $exception->getStatusCode();
+
+          $message = $statusCode === 404 ? "la ressource n'existe pas" : $exception->getMessage();
           $data = [
-              'status' => $exception->getStatusCode(),
-              'message' => $exception->getMessage()
+              'status' => $statusCode,
+              'message' => $message
           ];
-          $event = new JsonResponse($data, $exception->getStatusCode());
+          $response = new JsonResponse($data, $statusCode);
         } else {
           $data = [
               'status' => 500,
               'message' => 'Internal Server Error'
           ];
-          $event = new JsonResponse($data, 500);
+          $response = new JsonResponse($data, 500);
         }
+
+        $event->setResponse($response);
     }
 
     public static function getSubscribedEvents(): array

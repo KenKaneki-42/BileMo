@@ -17,7 +17,7 @@ use JMS\Serializer\Annotation\SerializedName as JMS;
  * @Hateoas\Relation(
  *    "self",
  *    href = @Hateoas\Route(
- *        "customerDetails",
+ *        "customer_details",
  *        parameters = { "id" = "expr(object.getId())" }
  *    ),
  *    exclusion = @Hateoas\Exclusion(groups={"getCustomerDetails"})
@@ -26,7 +26,7 @@ use JMS\Serializer\Annotation\SerializedName as JMS;
  * @Hateoas\Relation(
  *   "delete",
  *    href = @Hateoas\Route(
- *      "deleteCustomer",
+ *      "delete_customer",
  *      parameters = { "id" = "expr(object.getId())" }
  *    ),
  *    exclusion = @Hateoas\Exclusion(groups={"getCustomerDetails"})
@@ -35,7 +35,7 @@ use JMS\Serializer\Annotation\SerializedName as JMS;
  * @Hateoas\Relation(
  *  "create",
  *   href = @Hateoas\Route(
- *     "createCustomer"
+ *     "create_customer"
  *   ),
  *   exclusion = @Hateoas\Exclusion(groups={"getCustomerDetails"})
  * )
