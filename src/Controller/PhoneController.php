@@ -18,7 +18,7 @@ use Nelmio\ApiDocBundle\Annotation\Security as ApiSecurity;
 
 class PhoneController extends AbstractController
 {
-    #[Route('/api/phones', name: 'phonesList', methods: ['GET'])]
+    #[Route('/api/phones', name: 'phones_list', methods: ['GET'])]
     #[OA\Tag(name: 'Phones')]
     #[ApiSecurity(name: 'Bearer')]
     public function getAllPhones(PhoneRepository $phoneRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cachePool, VersioningService $versioningService): JsonResponse
@@ -40,7 +40,7 @@ class PhoneController extends AbstractController
         return new JsonResponse($jsonPhoneList, 200, [], true);
     }
 
-    #[Route('/api/phones/{id}', name: 'phoneDetails', methods: ['GET'])]
+    #[Route('/api/phones/{id}', name: 'phone_details', methods: ['GET'])]
     #[OA\Tag(name: 'Phones')]
     #[ApiSecurity(name: 'Bearer')]
     public function getPhoneDetails(Phone $phone, SerializerInterface $serializer, VersioningService $versioningService): JsonResponse
