@@ -49,7 +49,7 @@ you can consult the documentation at the following address: `{{base_url}}/api/do
 - `Faker`: Library for generating fake data for testing.
 - `Hateoas`: A framework to support the creation of RESTful APIs following the HATEOAS (Hypermedia As The Engine Of Application State) principle.
 - `JMSerializer`: Serialization and deserialization library for PHP objects.
-- `lexit`: Incorrect or placeholder text.
+- `LexikJWTAuthenticationBundle`: facilitates secure and efficient JWT-based authentication for Symfony applications.
 - `Nelmio`: Tools for API documentation and other features.
 - `symfony/security-bundle`: Security and user management.
 - `twig/twig`: Templating engine.
